@@ -4,7 +4,7 @@ import sqlite3
 
 app = Flask(__name__)
 app.secret_key = "my precious"
-app.database = "sample.db"
+app.database = "saple.db"
 
 def login_required(f):
     @wraps(f)
@@ -22,12 +22,16 @@ def connect_db():
 @app.route('/')
 @login_required
 def home():
-    g.db = connect_db()
-    cur = g.db.execute('select * from posts')
     posts = []
-    for row in cur.fetchall():
-        posts.append(dict(title=row[0], description=row[1]))
-    g.db.close()
+    try:
+        g.db = connect_db()
+        cur = g.db.execute('select * from posts')
+        posts = []
+        for row in cur.fetchall():
+            posts.append(dict(title=row[0], description=row[1]))
+        g.db.close()
+    except sqlite3.OperationalError:
+        flash("You have no database!")
     return render_template("index.html", posts=posts)
 
 @app.route('/welcome')
