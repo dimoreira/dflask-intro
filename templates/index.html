@@ -11,7 +11,8 @@
 {% for post in posts %}
   <strong>Title:</strong> {{ post.title }}<br/>
   <strong>Post:</strong> {{ post.description }}<br/>
-<br/>
+  <strong>Author:</strong> {{ post.author.name }}
+  <br/><br/>
 {% endfor %}
 
 {% endblock %}
