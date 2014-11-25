@@ -1,10 +1,17 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash, g
+from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask.ext.sqlalchemy import SQLAlchemy
 from functools import wraps
-import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "my precious"
-app.database = "saple.db"
+
+# config
+import os
+app.config.from_object(os.environ['APP_SETTINGS'])
+print os.environ['APP_SETTINGS']
+
+# create the sqlalchemy object
+db = SQLAlchemy(app)
+from models import *
 
 def login_required(f):
     @wraps(f)
@@ -16,22 +23,10 @@ def login_required(f):
             return redirect(url_for('login'))
     return wrap
 
-def connect_db():
-    return sqlite3.connect(app.database)
-
 @app.route('/')
 @login_required
 def home():
-    posts = []
-    try:
-        g.db = connect_db()
-        cur = g.db.execute('select * from posts')
-        posts = []
-        for row in cur.fetchall():
-            posts.append(dict(title=row[0], description=row[1]))
-        g.db.close()
-    except sqlite3.OperationalError:
-        flash("You have no database!")
+    posts = db.session.query(BlogPost).all()
     return render_template("index.html", posts=posts)
 
 @app.route('/welcome')
@@ -58,4 +53,4 @@ def logout():
     return redirect(url_for('welcome'))
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(host='0.0.0.0')
